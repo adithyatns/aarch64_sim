@@ -13,5 +13,5 @@ struct DecodedInstruction {
 
 class Decoder {
 public:
-  static DecodedInstruction decode(uint32_t instr);
+  static auto decode(uint32_t instr) -> DecodedInstruction;
 };

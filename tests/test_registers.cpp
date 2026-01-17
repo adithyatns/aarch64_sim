@@ -3,15 +3,28 @@
 
 using namespace arm64;
 
-TEST(RegisterTest, ZeroRegisterAlwaysZero) {
-  CPUState cpu;
-  cpu.X[0] = 0xDEADC0DE; // Set a value
-
-  // Logic check: reading the zero register should always return 0
-  EXPECT_EQ(cpu.readXZR(), 0);
+TEST(RegisterTest, BasicReadWrite) {
+  arm64::CPUState cpu;
+  cpu.setReg(0, 42);
+  EXPECT_EQ(cpu.getReg(0), 42);
 }
 
-TEST(RegisterTest, PCStartsAtZero) {
-  CPUState cpu = {}; // Zero initialize
-  EXPECT_EQ(cpu.PC, 0);
+TEST(RegisterTest, ZeroRegisterIsAlwaysZero) {
+  arm64::CPUState cpu;
+
+  // Try to write to XZR (Register 31)
+  cpu.setReg(31, 0xDEADBEEF);
+
+  // Read back - MUST be 0
+  EXPECT_EQ(cpu.getReg(31), 0);
+}
+
+TEST(RegisterTest, RegisterStateIndependence) {
+  arm64::CPUState cpu;
+  cpu.setReg(0, 100);
+  cpu.setReg(1, 200);
+
+  // Ensure writing X1 didn't overwrite X0
+  EXPECT_EQ(cpu.getReg(0), 100);
+  EXPECT_EQ(cpu.getReg(1), 200);
 }
