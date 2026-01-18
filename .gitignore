@@ -6,6 +6,6 @@ obj/
 # IDE files
 .vscode/
 .idea/
-
+ide.sh
 # OS files
 .DS_Store

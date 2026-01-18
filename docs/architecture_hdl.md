@@ -33,3 +33,14 @@ pg790 - arm reference manual
 | imm12 | [21:10] | 12-bit unsigned immediate |
 | rn |[9-5] | Source 32 bit CPU register encoded 5 bit|
 |rd |[4-0]| destination 32 but CPU register encoded 5 bit|
+
+### 5. Execution Pipeline
+The simulation follows a decoupled design to ensure testability:
+1. **Decoder** Pure function that maps 32-bit hex to 
+2. **Executor**
+3. **CPUState**
+
+
+### Supported Instruction
+- `ADD` (Immediate)
+- `SUB` (Immediate)
