@@ -1,4 +1,9 @@
-add_executable(unit_tests test_registers.cpp test_decoder.cpp test_executor.cpp)
+add_executable(unit_tests 
+  test_registers.cpp 
+  test_decoder.cpp 
+  test_executor.cpp
+  test_memory.cpp
+  )
 target_link_libraries(unit_tests PRIVATE sim_core GTest::gtest_main)
 
 include(GoogleTest)
