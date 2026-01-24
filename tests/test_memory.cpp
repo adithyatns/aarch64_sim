@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
 #include "memory.h"
+#include <gtest/gtest.h>
 
 TEST(MemoryTest, BasicReadWrite) {
-  // create a 1kb of RAM 
+  // create a 1kb of RAM
   Memory ram(1024);
   // write 0xFF to address 0x100
   ram.writeByte(100, 0xff);

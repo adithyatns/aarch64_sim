@@ -4,7 +4,7 @@
 
 TEST(ExecutorTest, ExecuteAddImmediate) {
   arm64::CPUState cpu;
-
+  Memory mem(1024);
   // Setup: X1 = 10
   cpu.setReg(1, 10);
 
@@ -16,7 +16,7 @@ TEST(ExecutorTest, ExecuteAddImmediate) {
   instr.imm = 5; // Add 5
 
   // Act
-  Executor::execute(instr, cpu);
+  Executor::execute(instr, cpu, mem);
 
   // Assert: X0 should be 10 + 5 = 15
   EXPECT_EQ(cpu.getReg(0), 15);
@@ -24,6 +24,8 @@ TEST(ExecutorTest, ExecuteAddImmediate) {
 
 TEST(ExecutorTest, ExecuteSubImmediate) {
   arm64::CPUState cpu;
+  Memory mem(1024);
+  // Setup: X1 = 10
   cpu.setReg(2, 20); // X2 = 20
 
   // Simulate: SUB X3, X2, #8
@@ -33,7 +35,7 @@ TEST(ExecutorTest, ExecuteSubImmediate) {
   instr.rn = 2;
   instr.imm = 8;
 
-  Executor::execute(instr, cpu);
+  Executor::execute(instr, cpu, mem);
 
   EXPECT_EQ(cpu.getReg(3), 12); // 20 - 8 = 12
 }
@@ -41,7 +43,8 @@ TEST(ExecutorTest, ExecuteSubImmediate) {
 TEST(ExecutorTest, FullPipelineAdd) {
   arm64::CPUState cpu;
   cpu.setReg(1, 50);
-
+  Memory mem(1024);
+  // Setup: X1 = 10
   // Hex for: ADD X0, X1, #25
   uint64_t hexInstr = 0x91006420;
 
@@ -49,7 +52,7 @@ TEST(ExecutorTest, FullPipelineAdd) {
   auto decoded = Decoder::decode(hexInstr);
 
   // step 2 : execute
-  Executor::execute(decoded, cpu);
+  Executor::execute(decoded, cpu, mem);
 
   // Assert
   EXPECT_EQ(cpu.getReg(0), 75);

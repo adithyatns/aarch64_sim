@@ -1,15 +1,20 @@
 # AArch64 Simulator: High-Level model Design (HLD)
 
 ## System Overview
+
 This simulator is functional model of ARMv8-A A64 instruction set. It aims to execute the binary compiled for aarch64
 
 ## 2. Architecture Components
+
 * **CPUState:** Manages the 31 general-purpose registers (X0-X30), the Stack Pointer (SP), and the Program Counter (PC).
 * **Instruction Decoder:** A hierarchical bit-masking engine that identifies instructions.
 * **Execution Engine:** Implements the ALU logic for data processing and branch control.
-
+* **Memory** Implements a byte-addressable RAM storage (`std::vector<uint8_t>`) with support for Little Endian 64-bit word access (`read64`/`write64`).
+  
 ## 3. Instruction Lifecycle
+
 The simulator operates in a loop:
+
 1. Fetch 32-bit word from Memory[PC].
 2. Decode bit-fields using masks.
 3. Execute operation and update Registers/Flags.
@@ -35,12 +40,15 @@ pg790 - arm reference manual
 |rd |[4-0]| destination 32 but CPU register encoded 5 bit|
 
 ### 5. Execution Pipeline
+
 The simulation follows a decoupled design to ensure testability:
+
 1. **Decoder** Pure function that maps 32-bit hex to 
 2. **Executor**
 3. **CPUState**
 
-
 ### Supported Instruction
+
 - `ADD` (Immediate)
 - `SUB` (Immediate)
+- `LDR` (Immediate)

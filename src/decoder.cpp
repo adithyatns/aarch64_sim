@@ -25,9 +25,10 @@ auto Decoder::decode(uint32_t instr) -> DecodedInstruction {
     decoded.type =
         (operation == 0) ? InstructionType::ADD_IMM : InstructionType::SUB_IMM;
 
-    decoded.rd = instr & MASK_REG;                   // Bits [4:0]
-    decoded.rn = (instr >> SHIFT_RN) & MASK_REG;     // Bits [9:5]
-    decoded.imm = (instr >> SHIFT_IMM) & MASK_IMM12; // Bits [21:10]
+    decoded.rd = instr & MASK_REG;                      // Bits [4:0]
+    decoded.rn = (instr >> SHIFT_RN) & MASK_REG;        // Bits [9:5]
+    uint32_t imm12 = (instr >> SHIFT_IMM) & MASK_IMM12; // Bits [21:10]
+    decoded.imm = static_cast<int32_t>(imm12);
     decoded.is64Bit =
         ((instr >> SHIFT_64BIT) & MASK_SINGLE_BIT) != 0; // Bit [31]
   }
