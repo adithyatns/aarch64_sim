@@ -1,6 +1,6 @@
-add_executable(unit_tests 
-  test_registers.cpp 
-  test_decoder.cpp 
+add_executable(unit_tests
+  test_registers.cpp
+  test_decoder.cpp
   test_executor.cpp
   test_memory.cpp
   test_ldr.cpp

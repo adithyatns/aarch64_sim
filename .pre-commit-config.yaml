@@ -1,0 +1,40 @@
+repos:
+  # 1. Standard hygiene hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # 2. Clang-Format (Enforces style from .clang-format)
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v17.0.6
+    hooks:
+      - id: clang-format
+        types_or: [c++, c]
+
+  # 3. Clang-Tidy (Static analysis)
+  # Note: Requires a 'compile_commands.json' in your build directory.
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: clang-tidy
+        args: ["-p=build"] # Points to your CMake build directory
+        stages: [manual]   # Optional: Only run on 'pre-commit run --manual' if it's too slow
+
+  # 4. Local Unit Tests
+  - repo: local
+    hooks:
+      - id: run-tests
+        name: Run GTest Suite
+        # The command to run your tests.
+        # We build first to ensure tests are up-to-date, then run ctest.
+        entry: bash -c "cd build && make -j4 && ctest --output-on-failure"
+        language: system
+        # Run on every commit
+        stages: [commit]
+        # pass_filenames: false tells pre-commit to run this once,
+        # not once per changed file.
+        pass_filenames: false

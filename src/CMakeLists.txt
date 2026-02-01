@@ -1,6 +1,6 @@
-add_library(sim_core 
-  registers.cpp 
-  decoder.cpp 
+add_library(sim_core
+  registers.cpp
+  decoder.cpp
   executor.cpp
   memory.cpp
   )

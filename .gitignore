@@ -3,6 +3,8 @@ build/
 bin/
 obj/
 
+setup_hooks.sh
+
 # IDE files
 .vscode/
 .idea/
