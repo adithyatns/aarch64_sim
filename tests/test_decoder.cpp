@@ -88,3 +88,38 @@ TEST(DecoderTest, DecodeStore_Word) {
   EXPECT_EQ(result.imm, 4);
   EXPECT_FALSE(result.is64Bit); // 32-bit
 }
+
+TEST(DecoderTest, Decode_CMP_Immediate) {
+  // Instruction: CMP X0, #42
+  // Alias for: SUBS XZR, X0, #42
+  // Hex: 0xF100A81F
+  // Binary: 1111 0001 0000 0000 1010 1000 0001 1111
+  uint32_t instr = 0xF100A81F;
+
+  auto decoded = Decoder::decode(instr);
+
+  // CMP is just SUBS with specific operands
+  EXPECT_EQ(decoded.type, InstructionType::SUB_IMM);
+  EXPECT_EQ(decoded.rd, 31); // Destination must be XZR (31)
+  EXPECT_EQ(decoded.rn, 0);  // Source is X0
+  EXPECT_EQ(decoded.imm, 42);
+  EXPECT_TRUE(decoded.is64Bit);
+  // You may need to add a 'setFlags' field to your struct later
+  EXPECT_TRUE(decoded.setFlags);
+}
+
+TEST(DecoderTest, Decode_CMP_Register) {
+  // Instruction: CMP X1, X2
+  // Alias for: SUBS XZR, X1, X2
+  // Hex: 0xEB02003F
+  uint32_t instr = 0xEB02003F;
+
+  auto decoded = Decoder::decode(instr);
+
+  EXPECT_EQ(decoded.type, InstructionType::SUB_REG); // Or generic SUBS
+  EXPECT_EQ(decoded.rd, 31);                         // XZR
+  EXPECT_EQ(decoded.rn, 1);                          // X1
+  EXPECT_EQ(decoded.rm, 2);                          // X2
+  EXPECT_TRUE(decoded.is64Bit);
+  EXPECT_TRUE(decoded.setFlags);
+}

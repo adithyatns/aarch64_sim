@@ -11,7 +11,12 @@ struct CPUState {
   std::array<uint64_t, REG_XZR> X; // X0-X30
   uint64_t PC;                     // Program Counter
   uint64_t SP;                     // Stack Pointer
-
+  struct {
+    bool N; // Negative Flag
+    bool Z; // Zero Flag
+    bool C; // Carry Flag
+    bool V; // Overflow Flag
+  } pstate;
   // Core Register Logic
   auto getReg(uint8_t regId) const -> uint64_t;
   auto setReg(uint8_t regId, uint64_t value) -> void;

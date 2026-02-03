@@ -40,7 +40,8 @@ auto Decoder::decode(uint32_t instr) -> DecodedInstruction {
     decoded.imm = static_cast<int32_t>(imm12);
     decoded.is64Bit =
         ((instr >> SHIFT_64BIT) & MASK_SINGLE_BIT) != 0; // Bit [31]
-  } else if ((group & GROUP_LS_IMM_MASK) == 0x4) {       // 0b11000 or 0b11001
+    decoded.setFlags = (decoded.rd == 31) ? 1 : 0; // If rd is XZR, set flags
+  } else if ((group & GROUP_LS_IMM_MASK) == 0x4) { // 0b11000 or 0b11001
     // Extract op bit [22] to distinguish LDR (1) from STR (0)
     uint32_t operation = (instr >> 22) & MASK_SINGLE_BIT;
     decoded.type =
@@ -80,7 +81,16 @@ auto Decoder::decode(uint32_t instr) -> DecodedInstruction {
     // Future: Handle branch instructions
 
   } else if ((group & GROUP_DP_REG_MASK) == GROUP_DP_REG) { // 0b0101
-    // Future: Handle Data Processing (Register) instructions
+    // Extract op bit [30] to distinguish SUB (1)
+    uint32_t operation = (instr >> SHIFT_OP) & MASK_SINGLE_BIT;
+    decoded.type =
+        (operation == 1) ? InstructionType::SUB_REG : InstructionType::ADD_REG;
+    decoded.rd = instr & MASK_REGFILE;               // Bits [4:0]
+    decoded.rn = (instr >> SHIFT_RN) & MASK_REGFILE; // Bits [9:5]
+    decoded.rm = (instr >> 16) & MASK_REGFILE;       // Bits [20:16]
+    decoded.is64Bit =
+        ((instr >> SHIFT_64BIT) & MASK_SINGLE_BIT) != 0; // Bit [31]
+    decoded.setFlags = (decoded.rd == 31) ? 1 : 0; // If rd is XZR, set flags
   } else {
     decoded.type = InstructionType::UNKNOWN;
   }

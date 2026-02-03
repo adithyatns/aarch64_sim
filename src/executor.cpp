@@ -35,6 +35,13 @@ auto Executor::execute(const DecodedInstruction &instr, arm64::CPUState &cpu,
     // logic: rd = rn + imm
     uint64_t val_rn = cpu.getReg(instr.rn);
     uint64_t result = val_rn + instr.imm;
+    if (instr.setFlags) {
+      // Set Flags
+      cpu.pstate.Z = (result == 0);
+      cpu.pstate.N = (result >> 63) & 0x1;
+      cpu.pstate.C = (result < val_rn); // Check for carry
+      // Overflow flag (V) is not typically set for ADD_IMM in CMP
+    }
     cpu.setReg(instr.rd, result);
     break;
   }
@@ -42,6 +49,43 @@ auto Executor::execute(const DecodedInstruction &instr, arm64::CPUState &cpu,
     // logic: rd = rn - imm
     uint64_t val_rn = cpu.getReg(instr.rn);
     uint64_t result = val_rn - instr.imm;
+    if (instr.setFlags) {
+      // Set Flags
+      cpu.pstate.Z = (result == 0);
+      cpu.pstate.N = (result >> 63) & 0x1;
+      cpu.pstate.C = (val_rn >= instr.imm); // No borrow
+      // Overflow flag (V) is not typically set for SUB_IMM in CMP
+    }
+    cpu.setReg(instr.rd, result);
+    break;
+  }
+  case InstructionType::ADD_REG: {
+    // logic: rd = rn + rm
+    uint64_t val_rn = cpu.getReg(instr.rn);
+    uint64_t val_rm = cpu.getReg(instr.rm);
+    uint64_t result = val_rn + val_rm;
+    if (instr.setFlags) {
+      // Set Flags
+      cpu.pstate.Z = (result == 0);
+      cpu.pstate.N = (result >> 63) & 0x1;
+      cpu.pstate.C = (result < val_rn); // Check for carry
+      // Overflow flag (V) is not typically set for ADD_REG in CMP
+    }
+    cpu.setReg(instr.rd, result);
+    break;
+  }
+  case InstructionType::SUB_REG: {
+    // logic: rd = rn - rm
+    uint64_t val_rn = cpu.getReg(instr.rn);
+    uint64_t val_rm = cpu.getReg(instr.rm);
+    uint64_t result = val_rn - val_rm;
+    if (instr.setFlags) {
+      // Set Flags
+      cpu.pstate.Z = (result == 0);
+      cpu.pstate.N = (result >> 63) & 0x1;
+      cpu.pstate.C = (val_rn >= val_rm); // No borrow
+      // Overflow flag (V) is not typically set for SUB_REG in CMP
+    }
     cpu.setReg(instr.rd, result);
     break;
   }
