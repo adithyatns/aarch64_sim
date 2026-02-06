@@ -200,3 +200,99 @@ TEST_F(ExecutorTest, Execute_CMP_Immediate_Sets_Carry) {
   // 20 - 10 requires NO borrow, so C=1.
   EXPECT_EQ(cpu.pstate.C, 1) << "C flag should be 1 (No borrow occurred)";
 }
+
+// 1. Test B.EQ (Equal) - Taken
+// Condition: Z == 1
+TEST_F(ExecutorTest, B_EQ_BranchTaken_When_Z_Set) {
+  cpu.PC = 0x1000;
+  cpu.pstate.Z = 1; // Simulate "Equal" result
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::BRANCH_COND;
+  instr.cond = 0x0; // EQ (Equal)
+  instr.imm = 20;   // Jump forward 20 bytes
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect PC to jump to 0x1000 + 20
+  EXPECT_EQ(cpu.PC, 0x1014);
+}
+
+// 2. Test B.EQ (Equal) - Not Taken
+// Condition: Z == 0
+TEST_F(ExecutorTest, B_EQ_BranchNotTaken_When_Z_Clear) {
+  cpu.PC = 0x1000;
+  cpu.pstate.Z = 0; // Simulate "Not Equal"
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::BRANCH_COND;
+  instr.cond = 0x0; // EQ
+  instr.imm = 20;
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect PC to remain unchanged (Simulator loop handles the +4 step)
+  EXPECT_EQ(cpu.PC, 0x1000);
+}
+
+// 3. Test B.NE (Not Equal) - Taken
+// Condition: Z == 0
+TEST_F(ExecutorTest, B_NE_BranchTaken_When_Z_Clear) {
+  cpu.PC = 0x2000;
+  cpu.pstate.Z = 0; // Simulate "Not Equal"
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::BRANCH_COND;
+  instr.cond = 0x1; // NE (Not Equal)
+  instr.imm = -16;  // Jump backward 16 bytes
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect PC to jump to 0x2000 - 16 = 0x1FF0
+  EXPECT_EQ(cpu.PC, 0x1FF0);
+}
+
+// 4. Test B.GE (Signed Greater or Equal) - Taken
+// Condition: N == V
+TEST_F(ExecutorTest, B_GE_BranchTaken_When_N_Equals_V) {
+  cpu.PC = 0x3000;
+
+  // Case 1: Positive result (N=0, V=0) -> 0 == 0 -> True
+  cpu.pstate.N = 0;
+  cpu.pstate.V = 0;
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::BRANCH_COND;
+  instr.cond = 0xA; // GE (Signed >=)
+  instr.imm = 100;
+
+  Executor::execute(instr, cpu, memory);
+  EXPECT_EQ(cpu.PC, 0x3064);
+
+  // Reset PC and test Case 2: Negative Overflow (N=1, V=1) -> 1 == 1 -> True
+  cpu.PC = 0x3000;
+  cpu.pstate.N = 1;
+  cpu.pstate.V = 1;
+  Executor::execute(instr, cpu, memory);
+  EXPECT_EQ(cpu.PC, 0x3064);
+}
+
+// 5. Test B.GE (Signed Greater or Equal) - Not Taken
+// Condition: N != V
+TEST_F(ExecutorTest, B_GE_BranchNotTaken_When_N_NotEqual_V) {
+  cpu.PC = 0x3000;
+
+  // Case: Negative result without overflow (N=1, V=0) -> "Less Than"
+  cpu.pstate.N = 1;
+  cpu.pstate.V = 0;
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::BRANCH_COND;
+  instr.cond = 0xA; // GE
+  instr.imm = 100;
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect PC to remain unchanged
+  EXPECT_EQ(cpu.PC, 0x3000);
+}

@@ -9,7 +9,9 @@ enum class InstructionType {
   ADD_REG,
   SUB_REG,
   LDR,
-  STR
+  STR,
+  BRANCH,
+  BRANCH_COND,
 };
 
 // New: Addressing Modes for Load/Store
@@ -29,6 +31,7 @@ struct DecodedInstruction {
   AddrMode mode = AddrMode::None;
   bool is64Bit = false;
   bool setFlags = 0; // For CMP instructions
+  uint8_t cond = 0;  // For conditional branches
 };
 
 class Decoder {

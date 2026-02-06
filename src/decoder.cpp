@@ -25,7 +25,7 @@ constexpr uint32_t SHIFT_OP = 30;
 
 auto Decoder::decode(uint32_t instr) -> DecodedInstruction {
   DecodedInstruction decoded;
-  // Data Processing (Immediate) Group: bits [28:24] == 10001
+  // Data Processing (Immediate) Group: bits [28:25] == 1000
   uint32_t group = (instr >> SHIFT_GROUP) & MASK_REG;
 
   if ((group == GROUP_DP_IMM) || (group == GROUP_DP_IMM2)) { // 0b10001
@@ -78,7 +78,28 @@ auto Decoder::decode(uint32_t instr) -> DecodedInstruction {
         ((instr >> 30) & 0x3) == 0x3; // Bit [31:30], 64-bit if not 0b11
   } else if ((group >= GROUP_BRANCH_IMM) &&
              (group <= GROUP_BRANCH_IMM_2)) { // 0b1011
-    // Future: Handle branch instructions
+    if ((instr >> 30) & 0x1) {
+      decoded.type = InstructionType::BRANCH_COND;
+    } else {
+      decoded.type = InstructionType::BRANCH;
+    }
+    if (decoded.type == InstructionType::BRANCH) {
+      uint32_t imm26 = instr & 0x3FFFFFF; // Bits [25:0]
+      // Sign-extend 26-bit immediate
+      if (imm26 & 0x2000000) {
+        imm26 |= ~0x3FFFFFF;
+      }
+      decoded.imm = imm26 * 4; // Left shift by 2 (word-aligned)
+    } else {
+      // For conditional branches, imm19 is in bits [23:5]
+      uint32_t imm19 = (instr >> 5) & 0x7FFFF; // Bits [23:5]
+      // Sign-extend 19-bit immediate
+      if (imm19 & 0x40000) {
+        imm19 |= ~0x7FFFF;
+      }
+      decoded.imm = imm19 * 4;    // Left shift by 2 (word-aligned)
+      decoded.cond = instr & 0xF; // Bits [3:0]
+    }
 
   } else if ((group & GROUP_DP_REG_MASK) == GROUP_DP_REG) { // 0b0101
     // Extract op bit [30] to distinguish SUB (1)

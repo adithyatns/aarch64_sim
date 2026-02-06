@@ -26,7 +26,58 @@ void Executor::write_reg(arm64::CPUState &cpu, uint8_t reg_idx, uint64_t value,
   }
   cpu.X[reg_idx] = value;
 }
+/*
+| **Code** | **Mnemonic** | **Meaning**                         | **Logic
+(PSTATE)**    | | -------- | ------------ | -----------------------------------
+| --------------------- | | `0000`   | **EQ**       | Equal | `Z == 1` | |
+`0001`   | **NE**       | Not Equal                           | `Z == 0` | |
+`0010`   | **CS / HS**  | Carry Set / Unsigned Higher or Same | `C == 1` | |
+`0011`   | **CC / LO**  | Carry Clear / Unsigned Lower        | `C == 0` | |
+`0100`   | **MI**       | Minus (Negative)                    | `N == 1` | |
+`0101`   | **PL**       | Plus (Positive or Zero)             | `N == 0` | |
+`0110`   | **VS**       | Overflow Set                        | `V == 1` | |
+`0111`   | **VC**       | Overflow Clear                      | `V == 0` | |
+`1000`   | **HI**       | Unsigned Higher                     | `C == 1 && Z ==
+0`    | | `1001`   | **LS**       | Unsigned Lower or Same              | `C ==
+0               | | `1010`   | **GE**       | Signed Greater or Equal | `N == V`
+| | `1011`   | **LT**       | Signed Less Than                    | `N != V` |
+| `1100`   | **GT**       | Signed Greater Than                 | `Z == 0 && N
+== V`    | | `1101`   | **LE**       | Signed Less or Equal                | `Z
+== 1               | | `1110`   | **AL**       | Always | `true` (Always jumps)
+|
+*/
+// Helper: Checks if a conditional branch should be taken based on the condition
+// code and current PSTATE flags.
+auto static check_condition(const arm64::CPUState &cpu, uint8_t cond) -> bool {
+  // For simplicity, we only implement a few conditions here
+  switch (cond) {
+  case 0x0: // EQ (Equal)
+    return cpu.pstate.Z;
+  case 0x1: // NE (Not Equal)
+    return !cpu.pstate.Z;
+  case 0x3: // CC/LO (Carry Clear / Unsigned Lower)
+    return !cpu.pstate.C;
+  case 0x4: // MI (Minus / Negative)
+    return cpu.pstate.N;
+  case 0x5: // PL (Plus / Positive or Zero)
+    return !cpu.pstate.N;
+  case 0x6: // VS (Overflow Set)
+    return cpu.pstate.V;
+  case 0x7: // VC (Overflow Clear)
+    return !cpu.pstate.V;
+  case 0x8: // HI (Unsigned Higher)
+    return cpu.pstate.C && !cpu.pstate.Z;
+  case 0xA: // GE (Greater or Equal, signed)
+    return cpu.pstate.N == cpu.pstate.V;
+  case 0xB: // LT (Less Than, signed)
+    return cpu.pstate.N != cpu.pstate.V;
 
+  default:
+    std::cerr << "Unsupported condition code: " << static_cast<int>(cond)
+              << "\n";
+    return false; // Default to not taking the branch
+  }
+}
 auto Executor::execute(const DecodedInstruction &instr, arm64::CPUState &cpu,
                        Memory &mem) -> void {
 
@@ -145,6 +196,28 @@ auto Executor::execute(const DecodedInstruction &instr, arm64::CPUState &cpu,
     mem.write64(target_addr, val_rd);
     break;
   }
+  case InstructionType::BRANCH:
+    // For simplicity, we won't implement actual branching logic here.
+    // In a full implementation, we'd update the PC based on the immediate
+    // value.
+    std::cout << "Branch instruction encountered. Immediate: " << instr.imm
+              << "\n";
+    if (instr.imm != 0) {
+      cpu.PC += instr.imm; // This is a simplification for demonstration
+    }
+    break;
+  case InstructionType::BRANCH_COND:
+    // For simplicity, we won't implement actual conditional branching logic
+    // here. In a full implementation, we'd check the condition flags and update
+    // the PC.
+    if (check_condition(cpu, instr.cond)) { // If condition is met, branch
+      cpu.PC += instr.imm; // This is a simplification for demonstration
+    } else {
+      std::cout << "Conditional Branch with unhandled condition code: "
+                << instr.cond << "\n";
+    }
+    std::cout << "Conditional Branch instruction encountered. Condition: "
+              << instr.cond << "\n";
   case InstructionType::UNKNOWN:
   default:
     break;
