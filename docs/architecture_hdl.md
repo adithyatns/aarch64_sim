@@ -52,8 +52,8 @@ The executor is stateless and acts upon the `CPUState` and `Memory`.
 | | `CMP` | `100x` | Alias of `SUBS` | ✅ **Done** | Discards result. |
 | **Load / Store** | `LDR` | `x1x0` | Bit 22=1 | ✅ **Done** | Offset, Pre-Index, Post-Index. |
 | | `STR` | `x1x0` | Bit 22=0 | ✅ **Done** | Offset, Pre-Index, Post-Index. |
-| **Branch (Immediate)** | `B` | `0001` | Bits 31-26=`000101` | 📝 *Drafted* | Unconditional (`PC + imm26`). |
-| | `B.cond | `0101` | Bits 31-24=`01010100` | 📝 *Drafted* | Conditional (`PC + imm19`). |
+| **Branch (Immediate)** | `B` | `0001` | Bits 31-26=`000101` | ✅ **Done** | Unconditional (`PC + imm26`). |
+| | `B.cond | `0101` | Bits 31-24=`01010100` | ✅ **Done** | Conditional (`PC + imm19`). |
 | **System** | `NOP` | `0000` | All Zeros | ❌ *Pending* | - |
 
 ## 4. Data Flow
