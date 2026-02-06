@@ -24,11 +24,14 @@ The decoder uses a hierarchical bit-masking strategy to classify instructions.
 * **Top-Level Dispatch:** Uses bits `[28:25]` to route instructions to specific groups.
   * `100x`: Data Processing - Immediate.
   * `x1x0`: Loads and Stores.
+  * `101x`: Branches and System.
+  *
 * **Decoding Logic:**
 
 * **Data Processing:** Extracts `sf` (size), `op` (opcode), and `imm12` (immediate).
 * **Load/Store:** Identifies Addressing Mode based on bits `24` and `11:10`.
 * **Modes:** `Offset`, `PreIndex`, `PostIndex`.
+* **Branches:** Distinguishes between Unconditional (`B`) and Conditional (`B.cond`).
 
 ### 2.3. Executor (`Executor` Class)
 
@@ -41,6 +44,7 @@ The executor is stateless and acts upon the `CPUState` and `Memory`.
 * **Instruction Handling:**
 * **ALU Operations:** Performs arithmetic (`ADD`, `SUB`) and updates PSTATE flags (`SUBS`/`CMP`).
 * **Memory Operations:** Calculates Effective Address based on `AddrMode`. Handles Writeback for Pre/Post-Index modes.
+* **Branch Operations:** Evaluates PSTATE conditions (EQ, NE, etc.) and updates `PC`.
 
 ## 3. Implementation Status
 
