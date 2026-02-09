@@ -111,7 +111,9 @@ auto Decoder::decode(uint32_t instr) -> DecodedInstruction {
     decoded.rm = (instr >> 16) & MASK_REGFILE;       // Bits [20:16]
     decoded.is64Bit =
         ((instr >> SHIFT_64BIT) & MASK_SINGLE_BIT) != 0; // Bit [31]
-    decoded.setFlags = (decoded.rd == 31) ? 1 : 0; // If rd is XZR, set flags
+    decoded.setFlags =
+        (instr >> 29) ? 1 : 0; // 29 bit DP register instructions with S bit set
+                               // (e.g., SUBS) set flags
   } else {
     decoded.type = InstructionType::UNKNOWN;
   }

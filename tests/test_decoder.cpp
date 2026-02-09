@@ -169,3 +169,48 @@ TEST_F(DecoderTest, Decode_Branch_Conditional_NegativeOffset) {
   EXPECT_EQ(d.imm, -8);
   EXPECT_EQ(d.cond, 0x1); // NE
 }
+
+// --- Data Processing (Register) ---
+
+TEST_F(DecoderTest, Decode_ADD_Register_64) {
+  // ADD X0, X1, X2
+  // Binary: 1000 1011 0000 0001 0000 0000 0010 0000
+  // Hex: 0x8B020020
+  auto d = decode(0x8B020020);
+  EXPECT_EQ(d.type, InstructionType::ADD_REG);
+  EXPECT_EQ(d.rd, 0);
+  EXPECT_EQ(d.rn, 1);
+  EXPECT_EQ(d.rm, 2);
+  EXPECT_TRUE(d.is64Bit);
+}
+
+TEST_F(DecoderTest, Decode_SUB_Register_64) {
+  // SUB X5, X6, X7
+  // Hex: 0xCB0700C5
+  auto d = decode(0xCB0700C5);
+  EXPECT_EQ(d.type, InstructionType::SUB_REG);
+  EXPECT_EQ(d.rd, 5);
+  EXPECT_EQ(d.rn, 6);
+  EXPECT_EQ(d.rm, 7);
+  EXPECT_TRUE(d.is64Bit);
+}
+
+TEST_F(DecoderTest, Decode_SUBS_Register_SetsFlags) {
+  // SUBS X0, X1, X2
+  // Hex: 0xEB020020
+  auto d = decode(0xEB020020);
+  EXPECT_EQ(d.type, InstructionType::SUB_REG);
+  EXPECT_EQ(d.rd, 0);
+  EXPECT_EQ(d.setFlags, true);
+}
+
+TEST_F(DecoderTest, Decode_CMP_Register_Alias) {
+  // CMP X1, X2 (Alias for SUBS XZR, X1, X2)
+  // Hex: 0xEB02003F
+  auto d = decode(0xEB02003F);
+  EXPECT_EQ(d.type, InstructionType::SUB_REG);
+  EXPECT_EQ(d.rd, 31); // XZR
+  EXPECT_EQ(d.rn, 1);
+  EXPECT_EQ(d.rm, 2);
+  EXPECT_EQ(d.setFlags, true);
+}

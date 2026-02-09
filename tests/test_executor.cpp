@@ -296,3 +296,85 @@ TEST_F(ExecutorTest, B_GE_BranchNotTaken_When_N_NotEqual_V) {
   // Expect PC to remain unchanged
   EXPECT_EQ(cpu.PC, 0x3000);
 }
+
+// --- Data Processing (Register) Execution ---
+
+TEST_F(ExecutorTest, Execute_ADD_Register) {
+  // Setup: X1 = 10, X2 = 20
+  cpu.setReg(1, 10);
+  cpu.setReg(2, 20);
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::ADD_REG;
+  instr.rd = 0;
+  instr.rn = 1;
+  instr.rm = 2;
+  instr.is64Bit = true;
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect: X0 = 10 + 20 = 30
+  EXPECT_EQ(cpu.getReg(0), 30);
+}
+
+TEST_F(ExecutorTest, Execute_SUB_Register) {
+  // Setup: X1 = 50, X2 = 20
+  cpu.setReg(1, 50);
+  cpu.setReg(2, 20);
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::SUB_REG;
+  instr.rd = 0;
+  instr.rn = 1;
+  instr.rm = 2;
+  instr.is64Bit = true;
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect: X0 = 50 - 20 = 30
+  EXPECT_EQ(cpu.getReg(0), 30);
+}
+
+TEST_F(ExecutorTest, Execute_SUBS_Register_Sets_Negative) {
+  // Setup: X1 = 10, X2 = 20 (Result -10)
+  cpu.setReg(1, 10);
+  cpu.setReg(2, 20);
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::SUB_REG;
+  instr.rd = 0;
+  instr.rn = 1;
+  instr.rm = 2;
+  instr.setFlags = true; // SUBS
+  instr.is64Bit = true;
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect: X0 = -10 (wrapped uint64), N flag set
+  EXPECT_EQ(cpu.getReg(0), static_cast<uint64_t>(-10));
+  EXPECT_EQ(cpu.pstate.N, 1);
+  EXPECT_EQ(cpu.pstate.Z, 0);
+}
+
+TEST_F(ExecutorTest, Execute_CMP_Register_Equality) {
+  // Setup: X1 = 42, X2 = 42
+  cpu.setReg(1, 42);
+  cpu.setReg(2, 42);
+  // Ensure flags are clear initially
+  cpu.pstate = {0, 0, 0, 0};
+
+  DecodedInstruction instr;
+  instr.type = InstructionType::SUB_REG;
+  instr.rd = 31; // XZR (Discard result)
+  instr.rn = 1;
+  instr.rm = 2;
+  instr.setFlags = true; // CMP sets flags
+  instr.is64Bit = true;
+
+  Executor::execute(instr, cpu, memory);
+
+  // Expect: Z=1 (Equal), C=1 (No borrow/Carry set for non-borrow subtraction)
+  EXPECT_EQ(cpu.pstate.Z, 1);
+  EXPECT_EQ(cpu.pstate.C, 1);
+  EXPECT_EQ(cpu.getReg(31), 0); // Ensure XZR wasn't written to (conceptually)
+}
